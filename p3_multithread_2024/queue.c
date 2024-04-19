@@ -23,10 +23,8 @@ queue* queue_init(int size)
 int queue_put(queue *q, struct element* x)
 {
 
-  // error if queue is full?
-  // if queue_full(q) {
-  //    return -1;
-  // }
+  // wait if queue is full (needs to be implemented)
+ 
   q->arr[q->tail] = *x;
   q->tail = (q->tail + 1) % q->maxSize;
   q->qSize++;
@@ -39,6 +37,8 @@ int queue_put(queue *q, struct element* x)
 struct element* queue_get(queue *q)
 {
   struct element* element = NULL;
+
+  // wait if queue is empty (needs to be implemented)
 
   // return the element but also dequeue it?
 
