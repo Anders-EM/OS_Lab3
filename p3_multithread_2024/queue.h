@@ -12,7 +12,23 @@ struct element {
 
 typedef struct queue {
   // Define the struct yourself
-  int param1;
+
+  // queue has a current size
+  int qSize;
+
+  // queue has a max size
+  int maxSize;
+
+  // queue holds an array of elements
+  struct element* arr;
+
+  // queue has a head pointer 
+  int head;
+
+  // queue has tail pointer 
+  int tail;
+
+
 }queue;
 
 queue* queue_init (int size);
