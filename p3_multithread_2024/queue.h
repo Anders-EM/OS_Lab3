@@ -6,7 +6,7 @@
 
 struct element {
   int product_id; //Product identifier
-  int op;         //Operation
+  int op;         //Operation (1 = PURCHASE, 2 = SALE)
   int units;      //Product units
 };
 

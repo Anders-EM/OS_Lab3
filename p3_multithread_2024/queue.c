@@ -25,6 +25,7 @@ int queue_put(queue *q, struct element* x)
 
   // wait if queue is full (needs to be implemented)
  
+  // need to do a deep copy?
   q->arr[q->tail] = *x;
   q->tail = (q->tail + 1) % q->maxSize;
   q->qSize++;
@@ -44,7 +45,10 @@ struct element* queue_get(queue *q)
 
   // use malloc
   element = (struct element*)malloc(sizeof(struct element));
+
+  // might be an issue here (do or don't dereference element?):
   *element = q->arr[q->head];
+
   q->head = (q->head + 1) % q->maxSize;
   q->qSize--;
   
