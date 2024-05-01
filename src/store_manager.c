@@ -52,6 +52,8 @@ void *producer(void *args)
   prod_ctrl.active_producers++;
   pthread_mutex_unlock(&prod_ctrl.lock);
 
+  printf("Producer started. Remaining: %d\n", prod_ctrl.active_producers);
+
   associated_data *data = (associated_data *)args;
   struct element curOp;
   //  CURRENTLY ONLY FOR ONE PRODUCER. NEED TO CHANGE FOR MULTIPLE PRODUCERS
@@ -71,6 +73,8 @@ void *producer(void *args)
   }
   pthread_mutex_unlock(&prod_ctrl.lock);
 
+  printf("Producer finished. Remaining: %d\n", prod_ctrl.active_producers);
+
   pthread_exit(0);
 }
 
@@ -80,22 +84,46 @@ void *consumer(void *args)
   associated_data *data = (associated_data *)args;
   struct element curOp;
 
+  while (true)
+  {
+
+    pthread_mutex_lock(&prod_ctrl.lock);
+    printf("Consumer waiting: active_producers=%d, buffer_empty=%d\n", prod_ctrl.active_producers, queue_empty(data->buffer));
+
+    while (prod_ctrl.active_producers > 0 && queue_empty(data->buffer))
+    {
+      pthread_cond_wait(&prod_ctrl.alldone, &prod_ctrl.lock);
+    }
+    if (prod_ctrl.active_producers == 0 && queue_empty(data->buffer))
+    {
+      pthread_mutex_unlock(&prod_ctrl.lock);
+      break;
+    }
+    pthread_mutex_unlock(&prod_ctrl.lock);
+    // once there is an element we can extract it
+    curOp = *(queue_get(data->buffer));
+
+    printf("Consuming: Product ID=%d, Operation=%d, Units=%d\n", curOp.product_id, curOp.op, curOp.units);
+
+    // compute profit and stock
+    if (curOp.op == 1)
+    {
+      // PURCHASE
+      *data->profits -= (purchaseCosts[curOp.product_id - 1] * curOp.units);
+      data->product_stock[curOp.product_id - 1] += curOp.units;
+    }
+    else
+    {
+      // SALE
+      *data->profits += (salesPrices[curOp.product_id - 1] * curOp.units);
+      data->product_stock[curOp.product_id - 1] -= curOp.units;
+    }
+  }
+
   /*
-    while (true)
+    for (int i = 0; i < data->num_operations; ++i)
     {
 
-      pthread_mutex_lock(&prod_ctrl.lock);
-
-      while (prod_ctrl.active_producers > 0 && queue_empty(data->buffer))
-      {
-        pthread_cond_wait(&prod_ctrl.alldone, &prod_ctrl.lock);
-      }
-      if (prod_ctrl.active_producers == 0 && queue_empty(data->buffer))
-      {
-        pthread_mutex_unlock(&prod_ctrl.lock);
-        break;
-      }
-      pthread_mutex_unlock(&prod_ctrl.lock);
       // once there is an element we can extract it
       curOp = *(queue_get(data->buffer));
 
@@ -114,28 +142,7 @@ void *consumer(void *args)
       }
     }
   */
-
-  for (int i = 0; i < data->num_operations; ++i)
-  {
-
-    // once there is an element we can extract it
-    curOp = *(queue_get(data->buffer));
-
-    // compute profit and stock
-    if (curOp.op == 1)
-    {
-      // PURCHASE
-      *data->profits -= (purchaseCosts[curOp.product_id - 1] * curOp.units);
-      data->product_stock[curOp.product_id - 1] += curOp.units;
-    }
-    else
-    {
-      // SALE
-      *data->profits += (salesPrices[curOp.product_id - 1] * curOp.units);
-      data->product_stock[curOp.product_id - 1] -= curOp.units;
-    }
-  }
-
+  printf("Consumer exiting\n");
   pthread_exit(0);
 }
 
